@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Route } from 'react-router-dom';
+import ProductContext from './contexts/ProductContext';
+import CartContext from './contexts/CartContext';
 import data from './data';
 
 // Components
@@ -8,35 +10,53 @@ import Products from './components/Products';
 import ShoppingCart from './components/ShoppingCart';
 
 function App() {
-	const [products] = useState(data);
-	const [cart, setCart] = useState([]);
+  const [products] = useState(data);
+  const [cart, setCart] = useState([]);
 
-	const addItem = item => {
-		setCart([...cart, item]);
-	};
+  useEffect(() => {
+    try {
+      const json = localStorage.getItem('cart');
+      const shoppingCart = JSON.parse(json);
 
-	return (
-		<div className="App">
-			<Navigation cart={cart} />
+      if (shoppingCart) {
+        setCart([...shoppingCart]);
+      }
+    } catch (error) {
+      // do nothing
+    }
 
-			{/* Routes */}
-			<Route
-				exact
-				path="/"
-				render={() => (
-					<Products
-						products={products}
-						addItem={addItem}
-					/>
-				)}
-			/>
+    console.log('mounted');
+  }, []);
 
-			<Route
-				path="/cart"
-				render={() => <ShoppingCart cart={cart} />}
-			/>
-		</div>
-	);
+  useEffect(() => {
+    const json = JSON.stringify(cart);
+    localStorage.setItem('cart', json);
+
+    console.log('updated cart');
+  }, [cart]);
+
+  const addItem = item => {
+    if (!cart.find(cartItem => cartItem.id === item.id)) {
+      setCart([...cart, item]);
+    }
+  };
+
+  const removeItem = id => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  return (
+    <ProductContext.Provider value={{ products, addItem }}>
+      <CartContext.Provider value={{ cart, removeItem }}>
+        <div className='App'>
+          <Navigation />
+          {/* Routes */}
+          <Route exact path='/' component={Products} />
+          <Route path='/cart' component={ShoppingCart} />
+        </div>
+      </CartContext.Provider>
+    </ProductContext.Provider>
+  );
 }
 
 export default App;
