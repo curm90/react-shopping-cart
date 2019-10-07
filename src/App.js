@@ -24,20 +24,25 @@ function App() {
     } catch (error) {
       // do nothing
     }
+
+    console.log('mounted');
   }, []);
 
   useEffect(() => {
     const json = JSON.stringify(cart);
     localStorage.setItem('cart', json);
+
+    console.log('updated cart');
   }, [cart]);
 
   const addItem = item => {
-    setCart([...cart, item]);
+    if (!cart.find(cartItem => cartItem.id === item.id)) {
+      setCart([...cart, item]);
+    }
   };
 
   const removeItem = id => {
-    const newCart = cart.filter(item => item.id !== id);
-    setCart([...newCart]);
+    setCart(cart.filter(item => item.id !== id));
   };
 
   return (
